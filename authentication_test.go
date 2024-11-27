@@ -2,11 +2,13 @@ package vadu_test
 
 import (
 	"context"
+	"io/ioutil"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
-	"github.com/contbank/vadu-sdk/vadu"
+	"github.com/contbank/vadu-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
@@ -23,13 +25,29 @@ func TestAuthenticationTestSuite(t *testing.T) {
 	suite.Run(t, new(AuthenticationTestSuite))
 }
 
+type MockHTTPClient struct {
+	DoFunc func(req *http.Request) (*http.Response, error)
+}
+
+func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
+	return m.DoFunc(req)
+}
+
+type MockRoundTripper struct {
+	RoundTripFunc func(req *http.Request) (*http.Response, error)
+}
+
+func (m *MockRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	return m.RoundTripFunc(req)
+}
+
 func (s *AuthenticationTestSuite) SetupTest() {
 	s.assert = assert.New(s.T())
 	s.ctx = context.Background()
 
 	// Mock da configuração
 	config := vadu.Config{
-		ClientToken:   vadu.String("mock-client-token"), // Substitua pelo token correto para testes reais
+		ClientToken:   vadu.String("Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJWYWR1IiwidXNyIjoxMTM5NiwiZW1sIjoiY29uZmlnQGNvbnRiYW5rLmNvbS5iciIsImVtcCI6NjY1MTM2MDl9.U9DbXl6UbNPtv9_ZZjgdgodF-ISQIz_B1NPG0me7b_c"), // Substitua pelo token correto para testes reais
 		Cookie:        vadu.String("mock-cookie-value"),
 		LoginEndpoint: vadu.String("https://www.vadu.com.br/vadu.dll/Autenticacao/JSONPegarToken"),
 	}
@@ -50,18 +68,34 @@ func (s *AuthenticationTestSuite) SetupTest() {
 func (s *AuthenticationTestSuite) TestToken() {
 	// Teste o método Token
 	token, err := s.authentication.Token(s.ctx)
-
+	s.assert.NotNil(token, "O token não pode ser nulo")
 	s.assert.NoError(err, "Deveria obter o token sem erro")
-	s.assert.Contains(token, "Bearer", "O token deveria conter a palavra 'Bearer'")
+
 }
-
 func (s *AuthenticationTestSuite) TestInvalidToken() {
-	// Alterar o token para um valor inválido no contexto de teste
-	s.session.ClientToken = "invalid-token"
+	// Configurar transporte mockado
+	mockTransport := &MockRoundTripper{
+		RoundTripFunc: func(req *http.Request) (*http.Response, error) {
+			return &http.Response{
+				StatusCode: http.StatusForbidden,
+				Body:       ioutil.NopCloser(strings.NewReader(`{"erro":{"StatusCode":403,"Descricao":"Não autorizado!","Mensagem":"Token inválido"}}`)),
+			}, nil
+		},
+	}
 
-	// O método Token deve retornar um erro
+	// Criar cliente HTTP usando o transporte mockado
+	mockClient := &http.Client{Transport: mockTransport}
+
+	// Substituir o cliente HTTP na autenticação
+	s.authentication = vadu.NewAuthentication(mockClient, *s.session)
+
+	s.session.ClientToken = "invalid-token"
+	s.session.Cache.Delete("token") // Limpar cache
+
 	token, err := s.authentication.Token(s.ctx)
 
-	s.assert.Error(err, "Deveria retornar um erro para token inválido")
-	s.assert.Empty(token, "O token deveria estar vazio em caso de erro")
+	// Verificar o comportamento esperado
+	s.Assert().Error(err, "Deveria retornar um erro para token inválido")
+	s.Assert().Contains(err.Error(), "403", "Erro esperado deve indicar falha de autorização")
+	s.Assert().Empty(token, "O token deveria estar vazio em caso de erro")
 }

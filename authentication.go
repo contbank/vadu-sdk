@@ -34,14 +34,18 @@ var ErrDefaultLogin = errors.New("falha ao autenticar")
 
 // login realiza o request à API do Vadu para obter o token de autenticação.
 func (a *Authentication) login(ctx context.Context) (*AuthenticationResponse, error) {
-	req, err := http.NewRequestWithContext(ctx, "POST", a.session.LoginEndpoint, nil)
+	if a.session.ClientToken == "" {
+		return nil, errors.New("ClientToken não fornecido")
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "GET", a.session.LoginEndpoint, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	// Adiciona os headers necessários
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", a.session.ClientToken))
+	req.Header.Add("Authorization", fmt.Sprintf("%s", a.session.ClientToken))
 	req.Header.Add("Cookie", a.session.Cookie)
 
 	// Envia o request
