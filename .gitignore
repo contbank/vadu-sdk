@@ -1,0 +1,17 @@
+# Binários gerados
+*.exe
+*.out
+*.o
+
+# Diretórios de cache
+/vendor/
+*.cache
+*.log
+
+# Diretórios do Go
+bin/
+pkg/
+
+# Configurações locais
+.idea/
+.vscode/
