@@ -9,6 +9,7 @@ import (
 
 	"github.com/contbank/vadu-sdk"
 	"github.com/contbank/vadu-sdk/mock"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
@@ -20,6 +21,7 @@ type VaduClientTestSuite struct {
 	ctx        context.Context
 	session    *vadu.Session
 	vaduClient *vadu.VaduClient
+	logger     *logrus.Logger
 }
 
 // Função para rodar os testes
@@ -37,6 +39,10 @@ func (s *VaduClientTestSuite) SetupTest() {
 		ClientToken: vadu.String("Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJWYWR1IiwidXNyIjoxMTM5NiwiZW1sIjoiY29uZmlnQGNvbnRiYW5rLmNvbS5iciIsImVtcCI6NjY1MTM2MDl9.U9DbXl6UbNPtv9_ZZjgdgodF-ISQIz_B1NPG0me7b_c"),
 		Cookie:      vadu.String("mock-cookie-value"),
 	}
+	// Configurar o logger
+	s.logger = logrus.New()
+	s.logger.SetFormatter(&logrus.JSONFormatter{}) // Formato estruturado JSON
+	s.logger.SetOutput(ioutil.Discard)             // Descartar logs durante testes (opcional)
 
 	// Criar a instância de Session com a configuração fornecida
 	session, err := vadu.NewSession(config)
@@ -52,7 +58,7 @@ func (s *VaduClientTestSuite) TestListaGruposAnalise() {
 	httpClient := mock.ListaGruposAnaliseMock()
 
 	// Criar o cliente Vadu com o mock HTTP
-	s.vaduClient = vadu.NewVaduClient(httpClient, *s.session)
+	s.vaduClient = vadu.NewVaduClient(httpClient, *s.session, s.logger)
 
 	// Chama a função ListaGruposAnalise
 	grupos, err := s.vaduClient.ListaGruposAnalise(s.ctx)
@@ -80,7 +86,7 @@ func (s *VaduClientTestSuite) TestListaGruposAnaliseErro() {
 	}
 
 	// Substituir cliente HTTP por nosso mock
-	s.vaduClient = vadu.NewVaduClient(mockTransport, *s.session)
+	s.vaduClient = vadu.NewVaduClient(mockTransport, *s.session, s.logger)
 
 	// Chama a função ListaGruposAnalise
 	grupos, err := s.vaduClient.ListaGruposAnalise(s.ctx)
@@ -97,7 +103,7 @@ func (s *VaduClientTestSuite) TestEnviaCNPJsParaAnalise() {
 	httpClient := mock.EnviaCNPJsParaAnaliseMock()
 
 	// Criar o cliente Vadu com o mock HTTP
-	s.vaduClient = vadu.NewVaduClient(httpClient, *s.session)
+	s.vaduClient = vadu.NewVaduClient(httpClient, *s.session, s.logger)
 
 	// Definir dados para análise
 	postBack := &vadu.PostBack{
@@ -133,7 +139,7 @@ func (s *VaduClientTestSuite) TestEnviaCNPJsParaAnaliseErro() {
 	}
 
 	// Substituir cliente HTTP por nosso mock
-	s.vaduClient = vadu.NewVaduClient(mockTransport, *s.session)
+	s.vaduClient = vadu.NewVaduClient(mockTransport, *s.session, s.logger)
 
 	// Chama a função EnviaCNPJsParaAnalise
 	response, err := s.vaduClient.EnviaCNPJsParaAnalise("33011770000199", 10802, []string{"98960887000164"}, nil)
@@ -141,7 +147,7 @@ func (s *VaduClientTestSuite) TestEnviaCNPJsParaAnaliseErro() {
 	// Verificar se ocorreu erro
 	s.assert.Error(err)
 	s.assert.Nil(response)
-	s.assert.Contains(err.Error(), "falha ao enviar CNPJs para análise")
+	s.assert.Contains(err.Error(), "erro ao enviar CNPJs para análise")
 }
 
 // TestEnviaCNPJsComDadosParaAnalise
@@ -150,7 +156,7 @@ func (s *VaduClientTestSuite) TestEnviaCNPJsComDadosParaAnalise() {
 	httpClient := mock.EnviaCNPJsParaAnaliseMock()
 
 	// Criar o cliente Vadu com o mock HTTP
-	s.vaduClient = vadu.NewVaduClient(httpClient, *s.session)
+	s.vaduClient = vadu.NewVaduClient(httpClient, *s.session, s.logger)
 
 	// Definir os dados para envio (considerando o layout correto)
 	listaDados := []vadu.DadosIntegracao{
@@ -223,8 +229,7 @@ func (s *VaduClientTestSuite) TestPegaStatusAnalise() {
 	// Usando o mock de PegaStatusAnalise
 	httpClient := mock.PegaStatusAnaliseMock()
 
-	// Criar o cliente Vadu com o mock HTTP
-	s.vaduClient = vadu.NewVaduClient(httpClient, *s.session)
+	s.vaduClient = vadu.NewVaduClient(httpClient, *s.session, s.logger)
 
 	// Chama a função PegaStatusAnalise
 	status, err := s.vaduClient.PegaStatusAnalise(4768906)
@@ -247,7 +252,7 @@ func (s *VaduClientTestSuite) TestPegaResumoAnalise() {
 	httpClient := mock.PegaResumoAnaliseMock()
 
 	// Criar o cliente Vadu com o mock HTTP
-	s.vaduClient = vadu.NewVaduClient(httpClient, *s.session)
+	s.vaduClient = vadu.NewVaduClient(httpClient, *s.session, s.logger)
 
 	// Chama a função PegaResumoAnalise
 	resumo, err := s.vaduClient.PegaResumoAnalise(4768906)
@@ -273,7 +278,7 @@ func (s *VaduClientTestSuite) TestListaResumoCNPJs() {
 	httpClient := mock.ListaResumoCNPJsMock()
 
 	// Criar o cliente Vadu com o mock HTTP
-	s.vaduClient = vadu.NewVaduClient(httpClient, *s.session)
+	s.vaduClient = vadu.NewVaduClient(httpClient, *s.session, s.logger)
 
 	// Chama a função ListaResumoCNPJs
 	resumos, err := s.vaduClient.ListaResumoCNPJs(4768906)
@@ -305,7 +310,7 @@ func (s *VaduClientTestSuite) TestListaResumoCNPJsDetalhado() {
 	httpClient := mock.ListaResumoCNPJsDetalhadoMock()
 
 	// Criar o cliente Vadu com o mock HTTP
-	s.vaduClient = vadu.NewVaduClient(httpClient, *s.session)
+	s.vaduClient = vadu.NewVaduClient(httpClient, *s.session, s.logger)
 
 	// Chama a função ListaResumoCNPJsDetalhado
 	resumos, err := s.vaduClient.ListaResumoCNPJsDetalhado(4768906)
@@ -325,5 +330,5 @@ func (s *VaduClientTestSuite) TestListaResumoCNPJsDetalhado() {
 	s.assert.Equal("B (500)", resumos[0].RatingSigla)
 	s.assert.Len(resumos[0].Logs, 1)
 	s.assert.Equal("Análise CNPJs", resumos[0].Logs[0].AnaliseDescricao)
-	s.assert.Equal("Cadastro 13 - Análise Sócios - 03", resumos[0].Logs[0].RegraDescricao)
+	s.assert.Equal("Cadastro 14 - Análise Sócios - 03", resumos[0].Logs[0].RegraDescricao)
 }

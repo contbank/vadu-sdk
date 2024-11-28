@@ -39,6 +39,17 @@ func ListaResumoCNPJsDetalhadoMock() *http.Client {
 								"transferido": false,
 								"erroConsulta": null,
 								"bloqueio": false
+							},
+							{
+								"analise_descricao": "Análise CNPJs",
+								"regra_descricao": "Cadastro 14 - Análise Sócios - 03",
+								"regra_condicao": " SÓCIOS.Homônimo com mesma data de nascimento IGUAL true OU SÓCIOS.Homônimo com mesmo nome da mãe IGUAL true OU SÓCIOS PARTICIPAÇÃO.Tem sanção IGUAL true ",
+								"erro": true,
+								"alerta": false,
+								"liberado": false,
+								"transferido": false,
+								"erroConsulta": null,
+								"bloqueio": false
 							}
 						]
 					}

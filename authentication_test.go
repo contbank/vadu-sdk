@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/contbank/vadu-sdk"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
@@ -19,6 +20,7 @@ type AuthenticationTestSuite struct {
 	ctx            context.Context
 	session        *vadu.Session
 	authentication *vadu.Authentication
+	logger         *logrus.Logger
 }
 
 func TestAuthenticationTestSuite(t *testing.T) {
@@ -51,6 +53,10 @@ func (s *AuthenticationTestSuite) SetupTest() {
 		Cookie:        vadu.String("mock-cookie-value"),
 		LoginEndpoint: vadu.String("https://www.vadu.com.br/vadu.dll/Autenticacao/JSONPegarToken"),
 	}
+	// Configurar o logger
+	s.logger = logrus.New()
+	s.logger.SetFormatter(&logrus.JSONFormatter{}) // Formato estruturado JSON
+	s.logger.SetOutput(ioutil.Discard)             // Descartar logs durante testes (opcional)
 
 	session, err := vadu.NewSession(config)
 
@@ -62,7 +68,7 @@ func (s *AuthenticationTestSuite) SetupTest() {
 	}
 
 	s.session = session
-	s.authentication = vadu.NewAuthentication(httpClient, *s.session)
+	s.authentication = vadu.NewAuthentication(httpClient, *s.session, s.logger)
 }
 
 func (s *AuthenticationTestSuite) TestToken() {
@@ -87,7 +93,7 @@ func (s *AuthenticationTestSuite) TestInvalidToken() {
 	mockClient := &http.Client{Transport: mockTransport}
 
 	// Substituir o cliente HTTP na autenticação
-	s.authentication = vadu.NewAuthentication(mockClient, *s.session)
+	s.authentication = vadu.NewAuthentication(mockClient, *s.session, s.logger)
 
 	s.session.ClientToken = "invalid-token"
 	s.session.Cache.Delete("token") // Limpar cache

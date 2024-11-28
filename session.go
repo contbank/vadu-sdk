@@ -63,6 +63,7 @@ func NewSession(config Config) (*Session, error) {
 
 	// Inicializa a sessão
 	return &Session{
+		APIEndpoint:   *config.APIEndpoint,
 		LoginEndpoint: *config.LoginEndpoint,
 		ClientToken:   *config.ClientToken,
 		Cookie:        *config.Cookie,
