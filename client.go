@@ -26,7 +26,8 @@ func NewVaduClient(httpClient *http.Client, session Session) *VaduClient {
 
 // ListaGruposAnalise lista os grupos de análise disponíveis na API do Vadu.
 func (vc *VaduClient) ListaGruposAnalise(ctx context.Context) ([]GrupoAnalise, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", "https://www.vadu.com.br/api-analise-bordero-config/v1/grupoanalise/cnpjcpf", nil)
+	url := fmt.Sprintf("%s/api-analise-bordero-config/v1/grupoanalise/cnpjcpf", vc.session.APIEndpoint)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +61,7 @@ func (vc *VaduClient) ListaGruposAnalise(ctx context.Context) ([]GrupoAnalise, e
 }
 
 // EnviaCNPJsParaAnalise envia uma lista de CNPJs para análise.
-func (c *VaduClient) EnviaCNPJsParaAnalise(cnpjEmpresa string, idGrupoAnalise int, listaCNPJCPF []string, postBack *PostBack) (*EnviaCNPJsResponse, error) {
+func (vc *VaduClient) EnviaCNPJsParaAnalise(cnpjEmpresa string, idGrupoAnalise int, listaCNPJCPF []string, postBack *PostBack) (*EnviaCNPJsResponse, error) {
 	// Montar o corpo da requisição
 	requestBody := EnviaCNPJsRequest{
 		CNPJEmpresa:    cnpjEmpresa,
@@ -75,18 +76,19 @@ func (c *VaduClient) EnviaCNPJsParaAnalise(cnpjEmpresa string, idGrupoAnalise in
 		return nil, err
 	}
 
-	// Criar a requisição HTTP
-	req, err := http.NewRequest("POST", "https://www.vadu.com.br/api-analise-cnpjcpf/v1/erp/analise", bytes.NewBuffer(jsonData))
+	url := fmt.Sprintf("%s/api-analise-cnpjcpf/v1/erp/analise", vc.session.APIEndpoint)
+
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, err
 	}
 
 	// Definir os cabeçalhos
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+c.session.ClientToken)
+	req.Header.Set("Authorization", "Bearer "+vc.session.ClientToken)
 
 	// Enviar a requisição usando o httpClient
-	resp, err := c.httpClient.Do(req)
+	resp, err := vc.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -108,12 +110,6 @@ func (c *VaduClient) EnviaCNPJsParaAnalise(cnpjEmpresa string, idGrupoAnalise in
 	return &response, nil
 }
 
-// Outra função de exemplo para acessar a API, como obter um token:
-func (vc *VaduClient) GetToken(ctx context.Context) (string, error) {
-	// Implementação de outra funcionalidade da API
-	return "", nil
-}
-
 // EnviaCNPJsComDadosParaAnalise envia uma lista de CNPJs com dados detalhados para análise.
 func (vc *VaduClient) EnviaCNPJsComDadosParaAnalise(cnpjEmpresa string, idGrupoAnalise int, listaDados []DadosIntegracao) (*EnviaCNPJsResponse, error) {
 	// Montar o corpo da requisição
@@ -129,8 +125,9 @@ func (vc *VaduClient) EnviaCNPJsComDadosParaAnalise(cnpjEmpresa string, idGrupoA
 		return nil, err
 	}
 
-	// Criar a requisição HTTP
-	req, err := http.NewRequest("POST", "https://www.vadu.com.br/api-analise-cnpjcpf/v2/erp/analise", bytes.NewBuffer(jsonData))
+	url := fmt.Sprintf("%s/api-analise-cnpjcpf/v2/erp/analise", vc.session.APIEndpoint)
+
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, err
 	}
@@ -165,10 +162,9 @@ func (vc *VaduClient) EnviaCNPJsComDadosParaAnalise(cnpjEmpresa string, idGrupoA
 
 // PegaStatusAnalise busca o status de uma análise pelo ID fornecido
 func (vc *VaduClient) PegaStatusAnalise(idAnalise int) (*StatusAnalise, error) {
-	baseURL := "https://www.vadu.com.br/api-analise-cnpjcpf/v1"
-	url := fmt.Sprintf("%s/erp/status/analise/id/%d", baseURL, idAnalise)
+	url := fmt.Sprintf("%s/api-analise-cnpjcpf/v1/erp/status/analise/id/%d", vc.session.APIEndpoint, idAnalise)
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("erro ao criar requisição: %w", err)
 	}
@@ -200,10 +196,9 @@ func (vc *VaduClient) PegaStatusAnalise(idAnalise int) (*StatusAnalise, error) {
 
 // PegaResumoAnalise busca o resumo de uma análise pelo ID fornecido
 func (vc *VaduClient) PegaResumoAnalise(idAnalise int) (*ResumoAnalise, error) {
-	baseURL := "https://www.vadu.com.br/api-analise-cnpjcpf/v1"
-	url := fmt.Sprintf("%s/erp/analise/id/%d", baseURL, idAnalise)
+	url := fmt.Sprintf("%s/api-analise-cnpjcpf/v1/erp/analise/id/%d", vc.session.APIEndpoint, idAnalise)
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("erro ao criar requisição: %w", err)
 	}
@@ -234,10 +229,9 @@ func (vc *VaduClient) PegaResumoAnalise(idAnalise int) (*ResumoAnalise, error) {
 
 // ListaResumoCNPJs busca os resumos dos CNPJs analisados para uma análise pelo ID fornecido
 func (vc *VaduClient) ListaResumoCNPJs(idAnalise int) ([]ResumoCNPJ, error) {
-	baseURL := "https://www.vadu.com.br/api-analise-cnpjcpf/v1"
-	url := fmt.Sprintf("%s/erp/analise/id/%d/cnpjcpf", baseURL, idAnalise)
 
-	req, err := http.NewRequest("GET", url, nil)
+	url := fmt.Sprintf("%s/api-analise-cnpjcpf/v1/erp/analise/id/%d/cnpjcpf", vc.session.APIEndpoint, idAnalise)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("erro ao criar requisição: %w", err)
 	}
@@ -267,7 +261,7 @@ func (vc *VaduClient) ListaResumoCNPJs(idAnalise int) ([]ResumoCNPJ, error) {
 }
 
 func (vc *VaduClient) ListaResumoCNPJsDetalhado(analiseID int) ([]ResumoCNPJDatalhado, error) {
-	url := fmt.Sprintf("https://www.vadu.com.br/api-analise-cnpjcpf/v1/erp/analise/id/%d/cnpjcpf/detalhado", analiseID)
+	url := fmt.Sprintf("%s/api-analise-cnpjcpf/v1/erp/analise/id/%d/cnpjcpf/detalhado", vc.session.APIEndpoint, analiseID)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err

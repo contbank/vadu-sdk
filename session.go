@@ -10,6 +10,7 @@ import (
 
 // Config contém as configurações necessárias para inicializar uma sessão.
 type Config struct {
+	APIEndpoint   *string        // URL do API
 	LoginEndpoint *string        // URL de autenticação
 	ClientToken   *string        // Token do cliente
 	Cookie        *string        // Cookie de autenticação
@@ -20,6 +21,7 @@ type Config struct {
 
 // Session representa a sessão autenticada com as configurações da API do Vadu.
 type Session struct {
+	APIEndpoint   string        // URL do API
 	LoginEndpoint string        // URL para autenticação
 	ClientToken   string        // Token do cliente
 	Cookie        string        // Cookie de autenticação
@@ -30,7 +32,10 @@ type Session struct {
 
 // NewSession cria uma nova instância de `Session` com base nas configurações fornecidas.
 func NewSession(config Config) (*Session, error) {
-	// Define valores padrão para os campos não preenchidos
+	if config.APIEndpoint == nil {
+		config.APIEndpoint = String("https://www.vadu.com.br")
+	}
+
 	if config.LoginEndpoint == nil {
 		config.LoginEndpoint = String("https://www.vadu.com.br/vadu.dll/Autenticacao/JSONPegarToken")
 	}
