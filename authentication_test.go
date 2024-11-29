@@ -49,7 +49,7 @@ func (s *AuthenticationTestSuite) SetupTest() {
 
 	// Mock da configuração
 	config := vadu.Config{
-		ClientToken:   vadu.String("Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJWYWR1IiwidXNyIjoxMTM5NiwiZW1sIjoiY29uZmlnQGNvbnRiYW5rLmNvbS5iciIsImVtcCI6NjY1MTM2MDl9.U9DbXl6UbNPtv9_ZZjgdgodF-ISQIz_B1NPG0me7b_c"), // Substitua pelo token correto para testes reais
+		ClientToken:   vadu.String("Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJWYWR1IiwidXNyIjoxMTM5NiwiZW1sIjoiY29uZmlnQGNvbnRiYW5rLmNvbS5iciIsImVtcCI6NjY1MTM2MDl9.U9DbXl6UbNPtv9_ZZjgdgodF-ISQIz_B1NPG0meXXXX"), // Substitua pelo token correto para testes reais
 		Cookie:        vadu.String("mock-cookie-value"),
 		LoginEndpoint: vadu.String("https://www.vadu.com.br/vadu.dll/Autenticacao/JSONPegarToken"),
 	}
