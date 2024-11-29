@@ -323,7 +323,7 @@ func (s *VaduClientTestSuite) TestListaResumoCNPJsDetalhado() {
 	s.assert.Len(resumos, 1)
 	s.assert.Equal(4768906, resumos[0].AnaliseID)
 	s.assert.Equal("37697591000108", resumos[0].CNPJCPF)
-	s.assert.Equal("WEBTECH SOLUTIONS CONSULTORIA E INFORMATICA LTDA", resumos[0].Nome)
+	s.assert.Equal("WEBSOLUTIONS LTDA", resumos[0].Nome)
 	s.assert.False(resumos[0].Erro)
 	s.assert.True(resumos[0].Alerta)
 	s.assert.Equal(500, resumos[0].Rating)

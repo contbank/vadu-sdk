@@ -15,8 +15,8 @@ func ListaResumoCNPJsDetalhadoMock() *http.Client {
 					{
 						"analise_id": 4768906,
 						"analise_cnpj_cpf_id": 28883956,
-						"cnpj_cpf": "37697591000108",
-						"nome": "WEBTECH SOLUTIONS CONSULTORIA E INFORMATICA LTDA",
+						"cnpj_cpf": "98960887000164",
+						"nome": "WEBSOLUTIONS LTDA",
 						"erro": false,
 						"alerta": true,
 						"bloqueio": false,
