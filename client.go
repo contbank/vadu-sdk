@@ -29,7 +29,16 @@ func NewVaduClient(httpClient *http.Client, session Session, logger *logrus.Logg
 }
 
 // ListaGruposAnalise lista os grupos de análise disponíveis na API do Vadu.
-func (vc *VaduClient) ListaGruposAnalise(ctx context.Context) ([]GrupoAnalise, error) {
+func (vc *VaduClient) ListaGruposAnalise(ctx context.Context, auth AuthenticationInterface) ([]GrupoAnalise, error) {
+
+	// Obtenha o token dinamicamente
+	token, err := auth.Token(ctx)
+	if err != nil {
+		vc.logger.WithError(err).Error("Erro ao obter token de autenticação")
+		return nil, fmt.Errorf("falha ao autenticar: %w", err)
+	}
+
+	// Obtenha o token dinamicamente
 	url := fmt.Sprintf("%s/api-analise-bordero-config/v1/grupoanalise/cnpjcpf", vc.session.APIEndpoint)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -38,7 +47,7 @@ func (vc *VaduClient) ListaGruposAnalise(ctx context.Context) ([]GrupoAnalise, e
 	}
 
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", vc.session.ClientToken))
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 	req.Header.Add("Cookie", vc.session.Cookie)
 
 	resp, err := vc.httpClient.Do(req)
@@ -88,7 +97,14 @@ func (vc *VaduClient) ListaGruposAnalise(ctx context.Context) ([]GrupoAnalise, e
 }
 
 // EnviaCNPJsParaAnalise envia uma lista de CNPJs para análise com validações e logs.
-func (vc *VaduClient) EnviaCNPJsParaAnalise(cnpjEmpresa string, idGrupoAnalise int, listaCNPJCPF []string, postBack *PostBack) (*EnviaCNPJsResponse, error) {
+func (vc *VaduClient) EnviaCNPJsParaAnalise(ctx context.Context, cnpjEmpresa string, idGrupoAnalise int, listaCNPJCPF []string, postBack *PostBack, auth AuthenticationInterface) (*EnviaCNPJsResponse, error) {
+
+	// Obtenha o token dinamicamente
+	token, err := auth.Token(ctx)
+	if err != nil {
+		vc.logger.WithError(err).Error("Erro ao obter token de autenticação")
+		return nil, fmt.Errorf("falha ao autenticar: %w", err)
+	}
 	// Validar o número de CNPJs
 	if len(listaCNPJCPF) > 2000 {
 		vc.logger.WithFields(logrus.Fields{
@@ -134,7 +150,7 @@ func (vc *VaduClient) EnviaCNPJsParaAnalise(cnpjEmpresa string, idGrupoAnalise i
 
 		// Definir os cabeçalhos
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+vc.session.ClientToken)
+		req.Header.Set("Authorization", "Bearer "+token)
 
 		// Enviar a requisição usando o httpClient
 		resp, err = vc.httpClient.Do(req)
@@ -187,7 +203,13 @@ func (vc *VaduClient) EnviaCNPJsParaAnalise(cnpjEmpresa string, idGrupoAnalise i
 }
 
 // EnviaCNPJsComDadosParaAnalise envia uma lista de CNPJs com dados detalhados para análise com validações e logs.
-func (vc *VaduClient) EnviaCNPJsComDadosParaAnalise(cnpjEmpresa string, idGrupoAnalise int, listaDados []DadosIntegracao) (*EnviaCNPJsResponse, error) {
+func (vc *VaduClient) EnviaCNPJsComDadosParaAnalise(ctx context.Context, cnpjEmpresa string, idGrupoAnalise int, listaDados []DadosIntegracao, auth AuthenticationInterface) (*EnviaCNPJsResponse, error) {
+	// Obtenha o token dinamicamente
+	token, err := auth.Token(ctx)
+	if err != nil {
+		vc.logger.WithError(err).Error("Erro ao obter token de autenticação")
+		return nil, fmt.Errorf("falha ao autenticar: %w", err)
+	}
 	// Validar o número de CNPJs
 	if len(listaDados) > 100 {
 		vc.logger.WithFields(logrus.Fields{
@@ -232,7 +254,7 @@ func (vc *VaduClient) EnviaCNPJsComDadosParaAnalise(cnpjEmpresa string, idGrupoA
 
 		// Definir os cabeçalhos
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+vc.session.ClientToken)
+		req.Header.Set("Authorization", "Bearer "+token)
 
 		// Enviar a requisição usando o httpClient
 		resp, err = vc.httpClient.Do(req)
@@ -285,20 +307,26 @@ func (vc *VaduClient) EnviaCNPJsComDadosParaAnalise(cnpjEmpresa string, idGrupoA
 }
 
 // PegaStatusAnalise busca o status de uma análise pelo ID fornecido, com validações, logs e timeout configurado.
-func (vc *VaduClient) PegaStatusAnalise(idAnalise int) (*StatusAnalise, error) {
+func (vc *VaduClient) PegaStatusAnalise(ctx context.Context, analiseID int, auth AuthenticationInterface) (*StatusAnalise, error) {
+	// Obtenha o token dinamicamente
+	token, err := auth.Token(ctx)
+	if err != nil {
+		vc.logger.WithError(err).Error("Erro ao obter token de autenticação")
+		return nil, fmt.Errorf("falha ao autenticar: %w", err)
+	}
 	// Validar se o ID da análise é positivo e numérico
-	if idAnalise <= 0 {
+	if analiseID <= 0 {
 		vc.logger.WithFields(logrus.Fields{
-			"idAnalise": idAnalise,
+			"analiseID": analiseID,
 		}).Error("ID de análise inválido")
-		return nil, fmt.Errorf("idAnalise deve ser um número positivo")
+		return nil, fmt.Errorf("analiseID deve ser um número positivo")
 	}
 
-	url := fmt.Sprintf("%s/api-analise-cnpjcpf/v1/erp/status/analise/id/%d", vc.session.APIEndpoint, idAnalise)
+	url := fmt.Sprintf("%s/api-analise-cnpjcpf/v1/erp/status/analise/id/%d", vc.session.APIEndpoint, analiseID)
 
 	// Logar o ID da análise sendo consultado
 	vc.logger.WithFields(logrus.Fields{
-		"idAnalise": idAnalise,
+		"analiseID": analiseID,
 		"url":       url,
 	}).Info("Consultando status da análise")
 
@@ -315,7 +343,7 @@ func (vc *VaduClient) PegaStatusAnalise(idAnalise int) (*StatusAnalise, error) {
 
 	// Definir os cabeçalhos
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+vc.session.ClientToken)
+	req.Header.Set("Authorization", "Bearer "+token)
 
 	// Enviar a requisição utilizando o httpClient configurado na struct
 	var resp *http.Response
@@ -337,7 +365,7 @@ func (vc *VaduClient) PegaStatusAnalise(idAnalise int) (*StatusAnalise, error) {
 
 	// Logar o status da resposta
 	vc.logger.WithFields(logrus.Fields{
-		"idAnalise":  idAnalise,
+		"analiseID":  analiseID,
 		"statusCode": resp.StatusCode,
 	}).Info("Resposta recebida da API")
 
@@ -345,7 +373,7 @@ func (vc *VaduClient) PegaStatusAnalise(idAnalise int) (*StatusAnalise, error) {
 	if resp.StatusCode != http.StatusOK {
 		respBody, _ := ioutil.ReadAll(resp.Body)
 		vc.logger.WithFields(logrus.Fields{
-			"idAnalise":  idAnalise,
+			"analiseID":  analiseID,
 			"statusCode": resp.StatusCode,
 			"response":   string(respBody),
 		}).Error("Falha ao consultar status da análise")
@@ -362,7 +390,7 @@ func (vc *VaduClient) PegaStatusAnalise(idAnalise int) (*StatusAnalise, error) {
 
 	// Logar a resposta bem-sucedida
 	vc.logger.WithFields(logrus.Fields{
-		"idAnalise": idAnalise,
+		"analiseID": analiseID,
 		"status":    status,
 	}).Info("Status da análise consultado com sucesso")
 
@@ -371,20 +399,26 @@ func (vc *VaduClient) PegaStatusAnalise(idAnalise int) (*StatusAnalise, error) {
 }
 
 // PegaResumoAnalise busca o resumo de uma análise pelo ID fornecido, com validações, logs e timeout configurado.
-func (vc *VaduClient) PegaResumoAnalise(idAnalise int) (*ResumoAnalise, error) {
+func (vc *VaduClient) PegaResumoAnalise(ctx context.Context, analiseID int, auth AuthenticationInterface) (*ResumoAnalise, error) {
+	// Obtenha o token dinamicamente
+	token, err := auth.Token(ctx)
+	if err != nil {
+		vc.logger.WithError(err).Error("Erro ao obter token de autenticação")
+		return nil, fmt.Errorf("falha ao autenticar: %w", err)
+	}
 	// Validação do ID de Análise - Certifica-se de que o ID é válido e numérico
-	if idAnalise <= 0 {
+	if analiseID <= 0 {
 		vc.logger.WithFields(logrus.Fields{
-			"idAnalise": idAnalise,
+			"analiseID": analiseID,
 		}).Error("ID de análise inválido")
-		return nil, fmt.Errorf("idAnalise deve ser um número positivo")
+		return nil, fmt.Errorf("analiseID deve ser um número positivo")
 	}
 
-	url := fmt.Sprintf("%s/api-analise-cnpjcpf/v1/erp/analise/id/%d", vc.session.APIEndpoint, idAnalise)
+	url := fmt.Sprintf("%s/api-analise-cnpjcpf/v1/erp/analise/id/%d", vc.session.APIEndpoint, analiseID)
 
 	// Logar o ID da análise sendo consultado
 	vc.logger.WithFields(logrus.Fields{
-		"idAnalise": idAnalise,
+		"analiseID": analiseID,
 		"url":       url,
 	}).Info("Consultando resumo da análise")
 
@@ -400,7 +434,7 @@ func (vc *VaduClient) PegaResumoAnalise(idAnalise int) (*ResumoAnalise, error) {
 	}
 
 	// Definir os cabeçalhos
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", vc.session.ClientToken))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 
 	// Enviar a requisição utilizando o httpClient da struct
 	var resp *http.Response
@@ -422,7 +456,7 @@ func (vc *VaduClient) PegaResumoAnalise(idAnalise int) (*ResumoAnalise, error) {
 
 	// Logar o status da resposta
 	vc.logger.WithFields(logrus.Fields{
-		"idAnalise":  idAnalise,
+		"analiseID":  analiseID,
 		"statusCode": resp.StatusCode,
 	}).Info("Resposta recebida da API")
 
@@ -430,7 +464,7 @@ func (vc *VaduClient) PegaResumoAnalise(idAnalise int) (*ResumoAnalise, error) {
 	if resp.StatusCode != http.StatusOK {
 		respBody, _ := ioutil.ReadAll(resp.Body)
 		vc.logger.WithFields(logrus.Fields{
-			"idAnalise":  idAnalise,
+			"analiseID":  analiseID,
 			"statusCode": resp.StatusCode,
 			"response":   string(respBody),
 		}).Error("Falha ao consultar resumo da análise")
@@ -447,7 +481,7 @@ func (vc *VaduClient) PegaResumoAnalise(idAnalise int) (*ResumoAnalise, error) {
 
 	// Logar a resposta bem-sucedida
 	vc.logger.WithFields(logrus.Fields{
-		"idAnalise": idAnalise,
+		"analiseID": analiseID,
 		"resumo":    resumo,
 	}).Info("Resumo da análise consultado com sucesso")
 
@@ -456,20 +490,26 @@ func (vc *VaduClient) PegaResumoAnalise(idAnalise int) (*ResumoAnalise, error) {
 }
 
 // / ListaResumoCNPJs busca os resumos dos CNPJs analisados para uma análise pelo ID fornecido, com validações, logs e timeout configurado.
-func (vc *VaduClient) ListaResumoCNPJs(idAnalise int) ([]ResumoCNPJ, error) {
+func (vc *VaduClient) ListaResumoCNPJs(ctx context.Context, analiseID int, auth AuthenticationInterface) ([]ResumoCNPJ, error) {
+	// Obtenha o token dinamicamente
+	token, err := auth.Token(ctx)
+	if err != nil {
+		vc.logger.WithError(err).Error("Erro ao obter token de autenticação")
+		return nil, fmt.Errorf("falha ao autenticar: %w", err)
+	}
 	// Validação do ID de Análise - Certifica-se de que o ID é válido e numérico
-	if idAnalise <= 0 {
+	if analiseID <= 0 {
 		vc.logger.WithFields(logrus.Fields{
-			"idAnalise": idAnalise,
+			"analiseID": analiseID,
 		}).Error("ID de análise inválido")
-		return nil, fmt.Errorf("idAnalise deve ser um número positivo")
+		return nil, fmt.Errorf("analiseID deve ser um número positivo")
 	}
 
-	url := fmt.Sprintf("%s/api-analise-cnpjcpf/v1/erp/analise/id/%d/cnpjcpf", vc.session.APIEndpoint, idAnalise)
+	url := fmt.Sprintf("%s/api-analise-cnpjcpf/v1/erp/analise/id/%d/cnpjcpf", vc.session.APIEndpoint, analiseID)
 
 	// Logar o ID da análise sendo consultado
 	vc.logger.WithFields(logrus.Fields{
-		"idAnalise": idAnalise,
+		"analiseID": analiseID,
 		"url":       url,
 	}).Info("Consultando resumo dos CNPJs para análise")
 
@@ -485,7 +525,7 @@ func (vc *VaduClient) ListaResumoCNPJs(idAnalise int) ([]ResumoCNPJ, error) {
 	}
 
 	// Definir os cabeçalhos
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", vc.session.ClientToken))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 
 	// Enviar a requisição utilizando o httpClient da struct
 	var resp *http.Response
@@ -507,7 +547,7 @@ func (vc *VaduClient) ListaResumoCNPJs(idAnalise int) ([]ResumoCNPJ, error) {
 
 	// Logar o status da resposta
 	vc.logger.WithFields(logrus.Fields{
-		"idAnalise":  idAnalise,
+		"analiseID":  analiseID,
 		"statusCode": resp.StatusCode,
 	}).Info("Resposta recebida da API")
 
@@ -515,7 +555,7 @@ func (vc *VaduClient) ListaResumoCNPJs(idAnalise int) ([]ResumoCNPJ, error) {
 	if resp.StatusCode != http.StatusOK {
 		respBody, _ := ioutil.ReadAll(resp.Body)
 		vc.logger.WithFields(logrus.Fields{
-			"idAnalise":  idAnalise,
+			"analiseID":  analiseID,
 			"statusCode": resp.StatusCode,
 			"response":   string(respBody),
 		}).Error("Falha ao consultar resumo dos CNPJs")
@@ -532,7 +572,7 @@ func (vc *VaduClient) ListaResumoCNPJs(idAnalise int) ([]ResumoCNPJ, error) {
 
 	// Logar a resposta bem-sucedida
 	vc.logger.WithFields(logrus.Fields{
-		"idAnalise": idAnalise,
+		"analiseID": analiseID,
 		"resumos":   resumos,
 	}).Info("Resumos dos CNPJs consultados com sucesso")
 
@@ -543,7 +583,13 @@ func (vc *VaduClient) ListaResumoCNPJs(idAnalise int) ([]ResumoCNPJ, error) {
 // ListaResumoCNPJsDetalhado busca os resumos detalhados dos CNPJs analisados para uma análise pelo ID fornecido,
 // com validação de entrada, resiliência, e logs detalhados.
 
-func (vc *VaduClient) ListaResumoCNPJsDetalhado(analiseID int) ([]ResumoCNPJDatalhado, error) {
+func (vc *VaduClient) ListaResumoCNPJsDetalhado(ctx context.Context, analiseID int, auth AuthenticationInterface) ([]ResumoCNPJDatalhado, error) {
+	// Obtenha o token dinamicamente
+	token, err := auth.Token(ctx)
+	if err != nil {
+		vc.logger.WithError(err).Error("Erro ao obter token de autenticação")
+		return nil, fmt.Errorf("falha ao autenticar: %w", err)
+	}
 	// Validação de Entrada: Verifica se o analiseID é um número válido e obrigatório
 	if analiseID <= 0 {
 		vc.logger.WithFields(logrus.Fields{
@@ -577,7 +623,7 @@ func (vc *VaduClient) ListaResumoCNPJsDetalhado(analiseID int) ([]ResumoCNPJData
 		}
 
 		// Definir os cabeçalhos
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", vc.session.ClientToken))
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 
 		// Enviar a requisição usando o httpClient da struct
 		resp, err = vc.httpClient.Do(req) // Usando httpClient da struct

@@ -12,6 +12,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// Interface para o método Token da autenticação
+type AuthenticationInterface interface {
+	Token(ctx context.Context) (string, error)
+}
+
 // Authentication define a estrutura para autenticação no Vadu SDK.
 type Authentication struct {
 	session    Session
@@ -20,10 +25,13 @@ type Authentication struct {
 }
 
 // NewAuthentication inicializa uma nova instância de Authentication.
-func NewAuthentication(httpClient *http.Client, session Session, logger *logrus.Logger) *Authentication {
+func NewAuthentication(client *http.Client, session Session, logger *logrus.Logger) *Authentication {
+	if client == nil {
+		panic("http.Client não pode ser nulo")
+	}
 	return &Authentication{
+		httpClient: client,
 		session:    session,
-		httpClient: httpClient,
 		logger:     logger,
 	}
 }
@@ -64,7 +72,7 @@ func (a *Authentication) login(ctx context.Context) (*AuthenticationResponse, er
 
 	// Adiciona os headers necessários.
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", fmt.Sprintf("%s", a.session.ClientToken))
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", a.session.ClientToken))
 	req.Header.Add("Cookie", a.session.Cookie)
 
 	// Envia o request.

@@ -47,7 +47,6 @@ func (s *VaduClientTestSuite) SetupTest() {
 	// Criar a instância de Session com a configuração fornecida
 	session, err := vadu.NewSession(config)
 	s.assert.NoError(err) // Verificar se a criação da sessão foi bem-sucedida
-
 	// Atribuir a sessão ao campo s.session
 	s.session = session
 }
@@ -57,11 +56,15 @@ func (s *VaduClientTestSuite) TestListaGruposAnalise() {
 	// Usando o mock de ListaGruposAnalise
 	httpClient := mock.ListaGruposAnaliseMock()
 
+	// Criar o mock de Authentication
+	authentication := new(mock.MockAuthentication)
+	authentication.On("Token", s.ctx).Return("mocked_token", nil)
+
 	// Criar o cliente Vadu com o mock HTTP
 	s.vaduClient = vadu.NewVaduClient(httpClient, *s.session, s.logger)
 
-	// Chama a função ListaGruposAnalise
-	grupos, err := s.vaduClient.ListaGruposAnalise(s.ctx)
+	// Chama o método com o mock de autenticação
+	grupos, err := s.vaduClient.ListaGruposAnalise(s.ctx, authentication)
 
 	// Verificar se não ocorreu erro e se a resposta está correta
 	s.assert.NoError(err)
@@ -88,8 +91,12 @@ func (s *VaduClientTestSuite) TestListaGruposAnaliseErro() {
 	// Substituir cliente HTTP por nosso mock
 	s.vaduClient = vadu.NewVaduClient(mockTransport, *s.session, s.logger)
 
+	// Criar o mock de Authentication
+	authentication := new(mock.MockAuthentication)
+	authentication.On("Token", s.ctx).Return("mocked_token", nil)
+
 	// Chama a função ListaGruposAnalise
-	grupos, err := s.vaduClient.ListaGruposAnalise(s.ctx)
+	grupos, err := s.vaduClient.ListaGruposAnalise(s.ctx, authentication)
 
 	// Verificar se ocorreu erro
 	s.assert.Error(err)
@@ -105,6 +112,10 @@ func (s *VaduClientTestSuite) TestEnviaCNPJsParaAnalise() {
 	// Criar o cliente Vadu com o mock HTTP
 	s.vaduClient = vadu.NewVaduClient(httpClient, *s.session, s.logger)
 
+	// Criar o mock de Authentication
+	authentication := new(mock.MockAuthentication)
+	authentication.On("Token", s.ctx).Return("mocked_token", nil)
+
 	// Definir dados para análise
 	postBack := &vadu.PostBack{
 		URL:              "https://webhook.site/4c8e0993-5d9c-4f3e-b1c5-bff567be9e78",
@@ -113,7 +124,7 @@ func (s *VaduClientTestSuite) TestEnviaCNPJsParaAnalise() {
 	}
 
 	// Chama a função EnviaCNPJsParaAnalise
-	response, err := s.vaduClient.EnviaCNPJsParaAnalise("33011770000199", 10802, []string{"98960887000164"}, postBack)
+	response, err := s.vaduClient.EnviaCNPJsParaAnalise(s.ctx, "33011770000199", 10802, []string{"98960887000164"}, postBack, authentication)
 
 	// Verificar se não ocorreu erro e se a resposta está correta
 	s.assert.NoError(err)
@@ -140,9 +151,11 @@ func (s *VaduClientTestSuite) TestEnviaCNPJsParaAnaliseErro() {
 
 	// Substituir cliente HTTP por nosso mock
 	s.vaduClient = vadu.NewVaduClient(mockTransport, *s.session, s.logger)
-
+	// Criar o mock de Authentication
+	authentication := new(mock.MockAuthentication)
+	authentication.On("Token", s.ctx).Return("mocked_token", nil)
 	// Chama a função EnviaCNPJsParaAnalise
-	response, err := s.vaduClient.EnviaCNPJsParaAnalise("33011770000199", 10802, []string{"98960887000164"}, nil)
+	response, err := s.vaduClient.EnviaCNPJsParaAnalise(s.ctx, "33011770000199", 10802, []string{"98960887000164"}, nil, authentication)
 
 	// Verificar se ocorreu erro
 	s.assert.Error(err)
@@ -157,6 +170,8 @@ func (s *VaduClientTestSuite) TestEnviaCNPJsComDadosParaAnalise() {
 
 	// Criar o cliente Vadu com o mock HTTP
 	s.vaduClient = vadu.NewVaduClient(httpClient, *s.session, s.logger)
+	authentication := new(mock.MockAuthentication)
+	authentication.On("Token", s.ctx).Return("mocked_token", nil)
 
 	// Definir os dados para envio (considerando o layout correto)
 	listaDados := []vadu.DadosIntegracao{
@@ -213,7 +228,7 @@ func (s *VaduClientTestSuite) TestEnviaCNPJsComDadosParaAnalise() {
 	}
 
 	// Chama a função EnviaCNPJsComDadosParaAnalise
-	response, err := s.vaduClient.EnviaCNPJsComDadosParaAnalise("33011770000199", 10802, listaDados)
+	response, err := s.vaduClient.EnviaCNPJsComDadosParaAnalise(s.ctx, "33011770000199", 10802, listaDados, authentication)
 
 	// Verificar se não ocorreu erro e se a resposta está correta
 	s.assert.NoError(err)
@@ -230,9 +245,11 @@ func (s *VaduClientTestSuite) TestPegaStatusAnalise() {
 	httpClient := mock.PegaStatusAnaliseMock()
 
 	s.vaduClient = vadu.NewVaduClient(httpClient, *s.session, s.logger)
+	authentication := new(mock.MockAuthentication)
+	authentication.On("Token", s.ctx).Return("mocked_token", nil)
 
 	// Chama a função PegaStatusAnalise
-	status, err := s.vaduClient.PegaStatusAnalise(4768906)
+	status, err := s.vaduClient.PegaStatusAnalise(s.ctx, 4768906, authentication)
 
 	// Verifica se não ocorreu erro
 	s.assert.NoError(err)
@@ -254,8 +271,11 @@ func (s *VaduClientTestSuite) TestPegaResumoAnalise() {
 	// Criar o cliente Vadu com o mock HTTP
 	s.vaduClient = vadu.NewVaduClient(httpClient, *s.session, s.logger)
 
+	authentication := new(mock.MockAuthentication)
+	authentication.On("Token", s.ctx).Return("mocked_token", nil)
+
 	// Chama a função PegaResumoAnalise
-	resumo, err := s.vaduClient.PegaResumoAnalise(4768906)
+	resumo, err := s.vaduClient.PegaResumoAnalise(s.ctx, 4768906, authentication)
 
 	// Verifica se não ocorreu erro
 	s.assert.NoError(err)
@@ -279,9 +299,11 @@ func (s *VaduClientTestSuite) TestListaResumoCNPJs() {
 
 	// Criar o cliente Vadu com o mock HTTP
 	s.vaduClient = vadu.NewVaduClient(httpClient, *s.session, s.logger)
+	authentication := new(mock.MockAuthentication)
+	authentication.On("Token", s.ctx).Return("mocked_token", nil)
 
 	// Chama a função ListaResumoCNPJs
-	resumos, err := s.vaduClient.ListaResumoCNPJs(4768906)
+	resumos, err := s.vaduClient.ListaResumoCNPJs(s.ctx, 4768906, authentication)
 
 	// Verifica se não ocorreu erro
 	s.assert.NoError(err)
@@ -311,9 +333,11 @@ func (s *VaduClientTestSuite) TestListaResumoCNPJsDetalhado() {
 
 	// Criar o cliente Vadu com o mock HTTP
 	s.vaduClient = vadu.NewVaduClient(httpClient, *s.session, s.logger)
+	authentication := new(mock.MockAuthentication)
+	authentication.On("Token", s.ctx).Return("mocked_token", nil)
 
 	// Chama a função ListaResumoCNPJsDetalhado
-	resumos, err := s.vaduClient.ListaResumoCNPJsDetalhado(4768906)
+	resumos, err := s.vaduClient.ListaResumoCNPJsDetalhado(s.ctx, 4768906, authentication)
 
 	// Verifica se não ocorreu erro
 	s.assert.NoError(err)
@@ -322,7 +346,7 @@ func (s *VaduClientTestSuite) TestListaResumoCNPJsDetalhado() {
 	s.assert.NotNil(resumos)
 	s.assert.Len(resumos, 1)
 	s.assert.Equal(4768906, resumos[0].AnaliseID)
-	s.assert.Equal("37697591000108", resumos[0].CNPJCPF)
+	s.assert.Equal("98960887000164", resumos[0].CNPJCPF)
 	s.assert.Equal("WEBSOLUTIONS LTDA", resumos[0].Nome)
 	s.assert.False(resumos[0].Erro)
 	s.assert.True(resumos[0].Alerta)
