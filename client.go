@@ -174,8 +174,10 @@ func (vc *VaduClient) EnviaCNPJsParaAnalise(ctx context.Context, cnpjEmpresa str
 		"url":        url,
 	}).Info("Resposta recebida da API")
 
-	// Se o status da resposta não for 200, retornar erro
-	if resp.StatusCode != http.StatusOK {
+	// Se o status da resposta não for 201, retornar erro
+	if resp.StatusCode != http.StatusCreated &&
+		resp.StatusCode != http.StatusAccepted &&
+		resp.StatusCode != http.StatusOK {
 		respBody, _ := ioutil.ReadAll(resp.Body)
 		vc.logger.WithFields(logrus.Fields{
 			"statusCode": resp.StatusCode,
@@ -279,7 +281,9 @@ func (vc *VaduClient) EnviaCNPJsComDadosParaAnalise(ctx context.Context, cnpjEmp
 	}).Info("Resposta recebida da API")
 
 	// Se o status da resposta não for 200, retornar erro
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusCreated &&
+		resp.StatusCode != http.StatusAccepted &&
+		resp.StatusCode != http.StatusOK {
 		respBody, _ := ioutil.ReadAll(resp.Body)
 		vc.logger.WithFields(logrus.Fields{
 			"statusCode": resp.StatusCode,
