@@ -228,7 +228,7 @@ func (s *VaduClientTestSuite) TestEnviaCNPJsComDadosParaAnalise() {
 	}
 
 	// Chama a função EnviaCNPJsComDadosParaAnalise
-	response, err := s.vaduClient.EnviaCNPJsComDadosParaAnalise(s.ctx, "33011770000199", 10802, listaDados, authentication)
+	response, err := s.vaduClient.EnviaCNPJsComDadosParaAnalise(s.ctx, "33011770000199", 10802, listaDados, nil, authentication)
 
 	// Verificar se não ocorreu erro e se a resposta está correta
 	s.assert.NoError(err)

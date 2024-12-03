@@ -136,6 +136,7 @@ type EnviaCNPJsComDadosRequest struct {
 	CNPJEmpresa                 string            `json:"cnpj_empresa"`
 	IDGrupoAnalise              int               `json:"id_grupo_analise"`
 	ListaCNPJCPFDadosIntegracao []DadosIntegracao `json:"lista_cnpj_cpf_dados_integracao"`
+	PostBack                    *PostBack         `json:"postBack,omitempty"` // PostBack é opcional
 }
 
 // StatusAnalise representa a resposta da API de status de análise

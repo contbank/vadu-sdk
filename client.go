@@ -205,7 +205,7 @@ func (vc *VaduClient) EnviaCNPJsParaAnalise(ctx context.Context, cnpjEmpresa str
 }
 
 // EnviaCNPJsComDadosParaAnalise envia uma lista de CNPJs com dados detalhados para análise com validações e logs.
-func (vc *VaduClient) EnviaCNPJsComDadosParaAnalise(ctx context.Context, cnpjEmpresa string, idGrupoAnalise int, listaDados []DadosIntegracao, auth AuthenticationInterface) (*EnviaCNPJsResponse, error) {
+func (vc *VaduClient) EnviaCNPJsComDadosParaAnalise(ctx context.Context, cnpjEmpresa string, idGrupoAnalise int, listaDados []DadosIntegracao, postBack *PostBack, auth AuthenticationInterface) (*EnviaCNPJsResponse, error) {
 	// Obtenha o token dinamicamente
 	token, err := auth.Token(ctx)
 	if err != nil {
@@ -227,6 +227,7 @@ func (vc *VaduClient) EnviaCNPJsComDadosParaAnalise(ctx context.Context, cnpjEmp
 		CNPJEmpresa:                 cnpjEmpresa,
 		IDGrupoAnalise:              idGrupoAnalise,
 		ListaCNPJCPFDadosIntegracao: listaDados,
+		PostBack:                    postBack, // postBack pode ser nil
 	}
 
 	// Converter o corpo para JSON
