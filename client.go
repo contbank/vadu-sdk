@@ -174,10 +174,8 @@ func (vc *VaduClient) EnviaCNPJsParaAnalise(ctx context.Context, cnpjEmpresa str
 		"url":        url,
 	}).Info("Resposta recebida da API")
 
-	// Se o status da resposta não for 201, retornar erro
-	if resp.StatusCode != http.StatusCreated &&
-		resp.StatusCode != http.StatusAccepted &&
-		resp.StatusCode != http.StatusOK {
+	// Se o status da resposta não for  Created (201), retornar erro
+	if resp.StatusCode != http.StatusCreated {
 		respBody, _ := ioutil.ReadAll(resp.Body)
 		vc.logger.WithFields(logrus.Fields{
 			"statusCode": resp.StatusCode,
@@ -281,10 +279,8 @@ func (vc *VaduClient) EnviaCNPJsComDadosParaAnalise(ctx context.Context, cnpjEmp
 		"url":        url,
 	}).Info("Resposta recebida da API")
 
-	// Se o status da resposta não for 200, retornar erro
-	if resp.StatusCode != http.StatusCreated &&
-		resp.StatusCode != http.StatusAccepted &&
-		resp.StatusCode != http.StatusOK {
+	// Se o status da resposta não for Created (201), retornar erro
+	if resp.StatusCode != http.StatusCreated {
 		respBody, _ := ioutil.ReadAll(resp.Body)
 		vc.logger.WithFields(logrus.Fields{
 			"statusCode": resp.StatusCode,
@@ -374,7 +370,7 @@ func (vc *VaduClient) PegaStatusAnalise(ctx context.Context, analiseID int, auth
 		"statusCode": resp.StatusCode,
 	}).Info("Resposta recebida da API")
 
-	// Se o status da resposta não for 200, retornar erro
+	// Se o status da resposta não for OK (200), retornar erro
 	if resp.StatusCode != http.StatusOK {
 		respBody, _ := ioutil.ReadAll(resp.Body)
 		vc.logger.WithFields(logrus.Fields{
@@ -465,8 +461,8 @@ func (vc *VaduClient) PegaResumoAnalise(ctx context.Context, analiseID int, auth
 		"statusCode": resp.StatusCode,
 	}).Info("Resposta recebida da API")
 
-	// Se o status da resposta não for 200, retornar erro
-	if resp.StatusCode != http.StatusOK {
+	// Se o status da resposta não for reated (201) retornar erro
+	if resp.StatusCode != http.StatusCreated {
 		respBody, _ := ioutil.ReadAll(resp.Body)
 		vc.logger.WithFields(logrus.Fields{
 			"analiseID":  analiseID,
@@ -556,8 +552,8 @@ func (vc *VaduClient) ListaResumoCNPJs(ctx context.Context, analiseID int, auth 
 		"statusCode": resp.StatusCode,
 	}).Info("Resposta recebida da API")
 
-	// Se o status da resposta não for 200, retornar erro
-	if resp.StatusCode != http.StatusOK {
+	// Se o status da resposta não for Created (201), retornar erro
+	if resp.StatusCode != http.StatusCreated {
 		respBody, _ := ioutil.ReadAll(resp.Body)
 		vc.logger.WithFields(logrus.Fields{
 			"analiseID":  analiseID,
@@ -655,8 +651,8 @@ func (vc *VaduClient) ListaResumoCNPJsDetalhado(ctx context.Context, analiseID i
 		"statusCode": resp.StatusCode,
 	}).Infof("Resposta recebida da API - Tempo de resposta: %v", resp.Status)
 
-	// Se o status da resposta não for OK (200), loga o erro e retorna
-	if resp.StatusCode != http.StatusOK {
+	// Se o status da resposta não for Created(201), loga o erro e retorna
+	if resp.StatusCode != http.StatusCreated {
 		respBody, _ := ioutil.ReadAll(resp.Body)
 		vc.logger.WithFields(logrus.Fields{
 			"analiseID":  analiseID,
