@@ -103,7 +103,7 @@ type LogAnalise struct {
 	Alerta           bool   `json:"alerta"`
 	Liberado         bool   `json:"liberado"`
 	Transferido      bool   `json:"transferido"`
-	ErroConsulta     *bool  `json:"erroConsulta"`
+	ErroConsulta     bool   `json:"erroConsulta"`
 	Bloqueio         bool   `json:"bloqueio"`
 }
 
